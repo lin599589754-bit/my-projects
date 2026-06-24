@@ -1,6 +1,7 @@
 package com.freshfood.backend.service;
 
 import com.freshfood.backend.common.BusinessException;
+import com.freshfood.backend.common.NotFoundException;
 import com.freshfood.backend.entity.Address;
 import com.freshfood.backend.entity.Cart;
 import com.freshfood.backend.entity.OrderItem;
@@ -62,11 +63,8 @@ public class OrderService {
     }
 
     public Orders getOrderDetail(Long id) {
-        Orders order = ordersRepository.findById(id).orElse(null);
-
-        if (order == null) {
-            return null;
-        }
+        Orders order = ordersRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("订单不存在"));
 
         order.setOrderItems(orderItemRepository.findByOrderIdOrderByIdAsc(id));
         return order;

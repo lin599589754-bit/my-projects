@@ -1,7 +1,6 @@
 package com.freshfood.backend.controller;
 
 import com.freshfood.backend.common.ApiResponse;
-import com.freshfood.backend.common.NotFoundException;
 import com.freshfood.backend.dto.OrderCreateRequest;
 import com.freshfood.backend.entity.Orders;
 import com.freshfood.backend.security.CurrentUser;
@@ -69,10 +68,6 @@ public class OrderController {
     @GetMapping("/{id}")
     public ApiResponse<Orders> getOrderDetail(@PathVariable @Min(value = 1, message = "订单ID不能小于1") Long id) {
         Orders order = orderService.getOrderDetail(id);
-        if (order == null) {
-            throw new NotFoundException("订单不存在");
-        }
-
         requireOrderOwner(order);
         return ApiResponse.success(order);
     }
@@ -118,8 +113,6 @@ public class OrderController {
     }
 
     private void requireOrderOwner(Orders order) {
-        if (order != null) {
-            currentUser.requireSameUser(order.getUserId());
-        }
+        currentUser.requireSameUser(order.getUserId());
     }
 }

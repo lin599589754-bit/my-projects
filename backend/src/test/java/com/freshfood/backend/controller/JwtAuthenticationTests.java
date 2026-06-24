@@ -1,5 +1,6 @@
 package com.freshfood.backend.controller;
 
+import com.freshfood.backend.common.NotFoundException;
 import com.freshfood.backend.entity.User;
 import com.freshfood.backend.service.AddressService;
 import com.freshfood.backend.service.CartService;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -184,7 +186,9 @@ class JwtAuthenticationTests {
     void orderDetailNotFoundReturns404() throws Exception {
         String token = loginAndGetToken();
 
-        given(orderService.getOrderDetail(999L)).willReturn(null);
+        willThrow(new NotFoundException("订单不存在"))
+                .given(orderService)
+                .getOrderDetail(999L);
 
         mockMvc.perform(get("/api/orders/999")
                         .header("Authorization", "Bearer " + token))

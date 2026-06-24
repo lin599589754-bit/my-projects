@@ -1,5 +1,6 @@
 package com.freshfood.backend.service;
 
+import com.freshfood.backend.common.NotFoundException;
 import com.freshfood.backend.entity.User;
 import com.freshfood.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,8 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("用户不存在"));
     }
 
     public User getUserByOpenid(String openid) {
