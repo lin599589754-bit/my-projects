@@ -1,5 +1,7 @@
 package com.freshfood.backend.controller;
 
+import com.freshfood.backend.security.CurrentUser;
+import com.freshfood.backend.security.JwtService;
 import com.freshfood.backend.service.AddressService;
 import com.freshfood.backend.service.CartService;
 import com.freshfood.backend.service.OrderService;
@@ -8,6 +10,7 @@ import com.freshfood.backend.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         ProductController.class,
         UserController.class
 })
+@AutoConfigureMockMvc(addFilters = false)
 class ValidationControllerTests {
 
     @Autowired
@@ -43,6 +47,12 @@ class ValidationControllerTests {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CurrentUser currentUser;
 
     @Test
     void createAddressRejectsBlankReceiverName() throws Exception {

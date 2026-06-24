@@ -2,6 +2,7 @@ package com.freshfood.backend.service;
 
 import com.freshfood.backend.entity.Address;
 import com.freshfood.backend.repository.AddressRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,6 +93,17 @@ public class AddressService {
     }
 
     @Transactional
+    public Address updateAddressForUser(Long userId, Long id, Address address) {
+        Address existingAddress = getOwnedAddress(userId, id);
+
+        if (existingAddress == null) {
+            return null;
+        }
+
+        return updateAddress(id, address);
+    }
+
+    @Transactional
     public Address setDefaultAddress(Long id) {
         Address address = addressRepository.findById(id).orElse(null);
 
@@ -108,8 +120,28 @@ public class AddressService {
     }
 
     @Transactional
+    public Address setDefaultAddressForUser(Long userId, Long id) {
+        Address address = getOwnedAddress(userId, id);
+
+        if (address == null) {
+            return null;
+        }
+
+        return setDefaultAddress(id);
+    }
+
+    @Transactional
     public void deleteAddress(Long id) {
         addressRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteAddressForUser(Long userId, Long id) {
+        Address address = getOwnedAddress(userId, id);
+
+        if (address != null) {
+            addressRepository.deleteById(id);
+        }
     }
 
     private void clearDefaultAddress(Long userId) {
@@ -120,5 +152,19 @@ public class AddressService {
             address.setUpdateTime(LocalDateTime.now());
             addressRepository.save(address);
         }
+    }
+
+    private Address getOwnedAddress(Long userId, Long id) {
+        Address address = addressRepository.findById(id).orElse(null);
+
+        if (address == null) {
+            return null;
+        }
+
+        if (!userId.equals(address.getUserId())) {
+            throw new AccessDeniedException("不能访问其他用户的数据");
+        }
+
+        return address;
     }
 }

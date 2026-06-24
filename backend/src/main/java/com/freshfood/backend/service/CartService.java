@@ -4,6 +4,7 @@ import com.freshfood.backend.entity.Cart;
 import com.freshfood.backend.entity.Product;
 import com.freshfood.backend.repository.CartRepository;
 import com.freshfood.backend.repository.ProductRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,6 +101,17 @@ public class CartService {
     }
 
     @Transactional
+    public Cart updateQuantityForUser(Long userId, Long id, Integer quantity) {
+        Cart cart = getOwnedCart(userId, id);
+
+        if (cart == null) {
+            return null;
+        }
+
+        return updateQuantity(id, quantity);
+    }
+
+    @Transactional
     public Cart updateSelected(Long id, Byte selected) {
         Cart cart = cartRepository.findById(id).orElse(null);
 
@@ -118,8 +130,28 @@ public class CartService {
     }
 
     @Transactional
+    public Cart updateSelectedForUser(Long userId, Long id, Byte selected) {
+        Cart cart = getOwnedCart(userId, id);
+
+        if (cart == null) {
+            return null;
+        }
+
+        return updateSelected(id, selected);
+    }
+
+    @Transactional
     public void deleteCart(Long id) {
         cartRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteCartForUser(Long userId, Long id) {
+        Cart cart = getOwnedCart(userId, id);
+
+        if (cart != null) {
+            cartRepository.deleteById(id);
+        }
     }
 
     @Transactional
@@ -130,5 +162,19 @@ public class CartService {
     @Transactional
     public void clearSelectedByUserId(Long userId) {
         cartRepository.deleteByUserIdAndSelected(userId, SELECTED);
+    }
+
+    private Cart getOwnedCart(Long userId, Long id) {
+        Cart cart = cartRepository.findById(id).orElse(null);
+
+        if (cart == null) {
+            return null;
+        }
+
+        if (!userId.equals(cart.getUserId())) {
+            throw new AccessDeniedException("不能访问其他用户的数据");
+        }
+
+        return cart;
     }
 }

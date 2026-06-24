@@ -1,16 +1,16 @@
 # FreshFoodSystem-v2
 
-社区生鲜系统重写版。
+社区生鲜 Web 全栈系统重写版。
 
-本项目参考同级目录中的旧项目 `FreshFoodSystem`，但数据库和后端代码按新的结构重新实现。当前优先完成数据库和 Spring Boot 后端，再继续实现微信小程序端和管理后台。
+本项目参考同级目录中的旧项目 `FreshFoodSystem`，但数据库和后端代码按新的结构重新实现。当前定位调整为偏后端实现的求职项目：优先完善 Spring Boot 后端、JWT 登录认证、数据库设计和 Web 前端联调，再逐步补充管理后台与工程化能力。
 
 ## 目录结构
 
 ```text
 FreshFoodSystem-v2
 ├─ backend
+├─ web
 ├─ admin
-├─ miniapp
 ├─ database
 ├─ mysql-data
 │  └─ Data
@@ -21,8 +21,8 @@ FreshFoodSystem-v2
 ## 模块说明
 
 - `backend`：Spring Boot 后端服务。
+- `web`：用户端 Web 前端。
 - `admin`：管理后台前端。
-- `miniapp`：微信小程序前端。
 - `database`：数据库初始化脚本、表结构说明、少量演示数据。
 - `mysql-data/Data`：新项目独立 MySQL 数据目录，使用端口 `3307`。
 - `scripts`：启动、停止、重置数据库等脚本。
@@ -41,13 +41,15 @@ FreshFoodSystem-v2
 - 地址模块接口。
 - 购物车模块。
 - 订单模块。
+- Spring Security + JWT 登录认证。
 
 待完成：
 
+- 用户端 Web 前端。
 - 管理后台接口。
-- 微信小程序端。
 - 管理后台前端。
-- 登录鉴权和更完整的数据校验。
+- Swagger/Knife4j 接口文档。
+- Redis、Docker Compose 等工程化增强。
 
 ## 阅读入口
 

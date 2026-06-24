@@ -38,7 +38,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE `user` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户ID，主键，自增',
-  `openid` varchar(64) NOT NULL COMMENT '微信小程序用户唯一标识，真实登录后由微信返回',
+  `openid` varchar(64) NOT NULL COMMENT '登录用户唯一标识，当前用于演示登录和后续JWT签发',
   `unionid` varchar(64) DEFAULT NULL COMMENT '微信开放平台统一ID，可为空',
   `nick_name` varchar(50) DEFAULT NULL COMMENT '用户昵称',
   `avatar_url` varchar(255) DEFAULT NULL COMMENT '用户头像地址',

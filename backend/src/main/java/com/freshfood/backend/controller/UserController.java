@@ -1,8 +1,11 @@
 package com.freshfood.backend.controller;
 
 import com.freshfood.backend.common.ApiResponse;
+import com.freshfood.backend.dto.LoginResponse;
 import com.freshfood.backend.dto.UserLoginRequest;
 import com.freshfood.backend.entity.User;
+import com.freshfood.backend.security.CurrentUser;
+import com.freshfood.backend.security.JwtService;
 import com.freshfood.backend.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,13 +27,17 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final JwtService jwtService;
+    private final CurrentUser currentUser;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtService jwtService, CurrentUser currentUser) {
         this.userService = userService;
+        this.jwtService = jwtService;
+        this.currentUser = currentUser;
     }
 
     @PostMapping("/login")
-    public ApiResponse<User> login(@Valid @ModelAttribute UserLoginRequest userLoginRequest) {
+    public ApiResponse<LoginResponse> login(@Valid @ModelAttribute UserLoginRequest userLoginRequest) {
         String openid = userLoginRequest.getOpenid();
         String nickName = userLoginRequest.getNickName();
         String avatarUrl = userLoginRequest.getAvatarUrl();
@@ -43,11 +50,21 @@ public class UserController {
             avatarUrl = "";
         }
 
-        return ApiResponse.success(userService.login(openid, nickName, avatarUrl));
+        User user = userService.login(openid, nickName, avatarUrl);
+        String token = jwtService.generateToken(user);
+        LoginResponse loginResponse = new LoginResponse("Bearer", token, jwtService.getExpiresIn(), user);
+
+        return ApiResponse.success(loginResponse);
+    }
+
+    @GetMapping("/current")
+    public ApiResponse<User> getCurrentUser() {
+        return ApiResponse.success(userService.getUserById(currentUser.getUserId()));
     }
 
     @GetMapping("/{id}")
     public ApiResponse<User> getUserById(@PathVariable @Min(value = 1, message = "用户ID不能小于1") Long id) {
+        currentUser.requireSameUser(id);
         return ApiResponse.success(userService.getUserById(id));
     }
 
