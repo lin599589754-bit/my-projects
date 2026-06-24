@@ -10,10 +10,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,7 +57,7 @@ public class CartController {
     }
 
     @PostMapping
-    public ApiResponse<Cart> addToCart(@Valid @ModelAttribute CartAddRequest cartAddRequest) {
+    public ApiResponse<Cart> addToCart(@Valid @RequestBody CartAddRequest cartAddRequest) {
         currentUser.requireSameUser(cartAddRequest.getUserId());
         return ApiResponse.success(cartService.addToCart(
                 cartAddRequest.getUserId(),

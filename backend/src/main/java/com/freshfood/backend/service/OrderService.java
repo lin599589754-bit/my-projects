@@ -1,5 +1,6 @@
 package com.freshfood.backend.service;
 
+import com.freshfood.backend.common.BusinessException;
 import com.freshfood.backend.entity.Address;
 import com.freshfood.backend.entity.Cart;
 import com.freshfood.backend.entity.OrderItem;
@@ -76,14 +77,14 @@ public class OrderService {
         List<Cart> selectedCarts = cartRepository.findByUserIdAndSelectedOrderByIdDesc(userId, SELECTED);
 
         if (selectedCarts.isEmpty()) {
-            throw new RuntimeException("购物车中没有选中的商品");
+            throw new BusinessException("购物车中没有选中的商品");
         }
 
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("收货地址不存在"));
+                .orElseThrow(() -> new BusinessException("收货地址不存在"));
 
         if (!userId.equals(address.getUserId())) {
-            throw new RuntimeException("收货地址不属于当前用户");
+            throw new BusinessException("收货地址不属于当前用户");
         }
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -142,10 +143,10 @@ public class OrderService {
     @Transactional
     public Orders mockPay(Long id) {
         Orders order = ordersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("订单不存在"));
 
         if (!WAIT_PAY.equals(order.getOrderStatus())) {
-            throw new RuntimeException("当前订单状态不能支付");
+            throw new BusinessException("当前订单状态不能支付");
         }
 
         order.setOrderStatus(WAIT_SHIP);
@@ -161,10 +162,10 @@ public class OrderService {
     @Transactional
     public Orders ship(Long id, String trackingNo) {
         Orders order = ordersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("订单不存在"));
 
         if (!WAIT_SHIP.equals(order.getOrderStatus())) {
-            throw new RuntimeException("当前订单状态不能发货");
+            throw new BusinessException("当前订单状态不能发货");
         }
 
         order.setOrderStatus(WAIT_RECEIVE);
@@ -178,10 +179,10 @@ public class OrderService {
     @Transactional
     public Orders confirmReceive(Long id) {
         Orders order = ordersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("订单不存在"));
 
         if (!WAIT_RECEIVE.equals(order.getOrderStatus())) {
-            throw new RuntimeException("当前订单状态不能确认收货");
+            throw new BusinessException("当前订单状态不能确认收货");
         }
 
         order.setOrderStatus(COMPLETED);
@@ -194,10 +195,10 @@ public class OrderService {
     @Transactional
     public Orders cancel(Long id) {
         Orders order = ordersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("订单不存在"));
 
         if (!WAIT_PAY.equals(order.getOrderStatus())) {
-            throw new RuntimeException("当前订单状态不能取消");
+            throw new BusinessException("当前订单状态不能取消");
         }
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderIdOrderByIdAsc(id);
@@ -225,14 +226,14 @@ public class OrderService {
 
     private Product getAvailableProduct(Cart cart) {
         Product product = productRepository.findById(cart.getProductId())
-                .orElseThrow(() -> new RuntimeException("商品不存在，商品ID：" + cart.getProductId()));
+                .orElseThrow(() -> new BusinessException("商品不存在，商品ID：" + cart.getProductId()));
 
         if (!ON_SALE.equals(product.getStatus())) {
-            throw new RuntimeException("商品已下架：" + product.getName());
+            throw new BusinessException("商品已下架：" + product.getName());
         }
 
         if (product.getStock() < cart.getQuantity()) {
-            throw new RuntimeException("库存不足：" + product.getName());
+            throw new BusinessException("库存不足：" + product.getName());
         }
 
         return product;

@@ -1,44 +1,49 @@
-# 脚本目录
+# 脚本说明
 
-这里用于保存项目启动和维护脚本。
+本目录用于放置项目本地开发辅助脚本。
 
-当前脚本：
+当前项目主要操作仍以手动命令为主，暂未放置复杂脚本。
 
-- `start-mysql-v2.ps1`：启动 D 盘独立 MySQL 实例。
-- `stop-mysql-v2.ps1`：停止 D 盘独立 MySQL 实例。
-- `reset-database.ps1`：重建 `fresh_delivery_v2` 数据库。
+## 常用命令
 
-## 使用方式
-
-在项目根目录执行：
+进入后端目录：
 
 ```powershell
-.\scripts\start-mysql-v2.ps1
+cd D:\Projects\FreshFoodSystem-v2\backend
 ```
 
-停止 MySQL：
+启动后端：
 
 ```powershell
-.\scripts\stop-mysql-v2.ps1
+.\mvnw.cmd spring-boot:run
 ```
 
-重建数据库并导入演示数据：
+运行测试：
 
 ```powershell
-.\scripts\reset-database.ps1
+.\mvnw.cmd test
 ```
 
-## 数据库连接
+查看 Git 状态：
 
-```text
-Host: 127.0.0.1
-Port: 3307
-Database: fresh_delivery_v2
-Username: root
-Password: 空
+```powershell
+git status -sb
 ```
 
-## 计划补充
+查看最近提交：
 
-- `start-backend.bat`：启动后端。
-- `start-admin.bat`：启动管理后台。
+```powershell
+git log --oneline -5
+```
+
+## 后续可补充脚本
+
+后续如果项目继续扩展，可以补充：
+
+- 一键启动 MySQL 容器或本地 MySQL 服务
+- 一键初始化数据库
+- 一键启动后端
+- 一键运行测试
+- 一键打包后端
+
+当前阶段不强行增加脚本，避免项目复杂度超过实际需要。

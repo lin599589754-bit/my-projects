@@ -12,9 +12,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.validation.annotation.Validated;
@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@Valid @ModelAttribute UserLoginRequest userLoginRequest) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody UserLoginRequest userLoginRequest) {
         String openid = userLoginRequest.getOpenid();
         String nickName = userLoginRequest.getNickName();
         String avatarUrl = userLoginRequest.getAvatarUrl();

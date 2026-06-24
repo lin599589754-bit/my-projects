@@ -1,5 +1,6 @@
 package com.freshfood.backend.service;
 
+import com.freshfood.backend.common.BusinessException;
 import com.freshfood.backend.entity.Cart;
 import com.freshfood.backend.entity.Product;
 import com.freshfood.backend.repository.CartRepository;
@@ -43,7 +44,7 @@ public class CartService {
         Product product = productRepository.findById(productId).orElse(null);
 
         if (product == null || !ON_SALE.equals(product.getStatus())) {
-            throw new RuntimeException("商品不存在或已下架");
+            throw new BusinessException("商品不存在或已下架");
         }
 
         Cart cart = cartRepository.findByUserIdAndProductId(userId, productId)
@@ -62,7 +63,7 @@ public class CartService {
         }
 
         if (product.getStock() < newQuantity) {
-            throw new RuntimeException("库存不足");
+            throw new BusinessException("库存不足");
         }
 
         cart.setQuantity(newQuantity);
@@ -87,11 +88,11 @@ public class CartService {
         Product product = productRepository.findById(cart.getProductId()).orElse(null);
 
         if (product == null || !ON_SALE.equals(product.getStatus())) {
-            throw new RuntimeException("商品不存在或已下架");
+            throw new BusinessException("商品不存在或已下架");
         }
 
         if (product.getStock() < quantity) {
-            throw new RuntimeException("库存不足");
+            throw new BusinessException("库存不足");
         }
 
         cart.setQuantity(quantity);

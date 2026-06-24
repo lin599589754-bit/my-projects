@@ -1,130 +1,133 @@
 # FreshFoodSystem-v2
 
-社区生鲜 Web 全栈系统重写版。
+FreshFoodSystem-v2 是一个生鲜电商后端重写项目，当前重心是后端能力展示和后续 Web 前端联调。项目从原 FreshFoodSystem 模型出发，去掉小程序优先目标，改为更适合求职展示的 Spring Boot + MySQL + JWT 后端项目。
 
-本项目参考同级目录中的旧项目 `FreshFoodSystem`，但数据库和后端代码按新的结构重新实现。当前定位调整为偏后端实现的求职项目：优先完善 Spring Boot 后端、JWT 登录认证、数据库设计和 Web 前端联调，再逐步补充管理后台与工程化能力。
-
-## 目录结构
-
-```text
-FreshFoodSystem-v2
-├─ backend
-├─ web
-├─ admin
-├─ database
-├─ mysql-data
-│  └─ Data
-├─ scripts
-└─ docs
-```
-
-## 模块说明
-
-- `backend`：Spring Boot 后端服务。
-- `web`：用户端 Web 前端。
-- `admin`：管理后台前端。
-- `database`：数据库初始化脚本、表结构说明、少量演示数据。
-- `mysql-data/Data`：新项目独立 MySQL 数据目录，使用端口 `3307`。
-- `scripts`：启动、停止、重置数据库等脚本。
-- `docs`：需求分析、接口文档、开发记录。
-
-## 当前进度
+## 当前状态
 
 已完成：
 
-- MySQL 独立数据目录和 `fresh_delivery_v2` 数据库。
-- 核心业务表：用户、分类、商品、购物车、地址、订单、订单明细。
-- 后端基础结构：统一响应、健康检查、JPA 数据库连接。
-- 分类模块接口。
-- 商品模块接口。
-- 用户模块接口。
-- 地址模块接口。
-- 购物车模块。
-- 订单模块。
-- Spring Security + JWT 登录认证。
+- MySQL 数据库结构与初始化数据
+- 分类、商品、用户、地址、购物车、订单核心接口
+- 统一响应结构 `ApiResponse<T>`
+- 全局异常处理
+- DTO 请求对象与参数校验
+- Spring Security + JWT 登录认证
+- 用户数据所有权校验
+- 业务异常和未知异常分离
+- 订单不存在返回 `404`
 
-待完成：
+暂未实现：
 
-- 用户端 Web 前端。
-- 管理后台接口。
-- 管理后台前端。
-- Swagger/Knife4j 接口文档。
-- Redis、Docker Compose 等工程化增强。
+- 管理员角色与管理后台
+- 真实微信登录
+- 真实支付
+- 高并发库存扣减方案
+- 生产部署
 
-## 阅读入口
+## 技术栈
 
-1. `docs/01-需求分析.md`
-2. `docs/02-后端接口.md`
-3. `database/README.md`
-4. `scripts/README.md`
+| 模块 | 技术 |
+| --- | --- |
+| 后端 | Spring Boot 4.1.0 |
+| Web | Spring WebMVC |
+| ORM | Spring Data JPA |
+| 数据库 | MySQL 8 |
+| 参数校验 | Jakarta Validation |
+| 认证授权 | Spring Security + OAuth2 Resource Server JWT |
+| 构建工具 | Maven |
+| Java | JDK 17 |
+| 辅助工具 | Lombok |
 
-## 数据库
-
-新项目使用独立 MySQL 实例：
-
-```text
-Host: 127.0.0.1
-Port: 3307
-Database: fresh_delivery_v2
-Username: root
-Password: 空
-DataDir: D:\Projects\FreshFoodSystem-v2\mysql-data\Data
-```
-
-启动数据库：
-
-```powershell
-.\scripts\start-mysql-v2.ps1
-```
-
-重建数据库和演示数据：
-
-```powershell
-.\scripts\reset-database.ps1
-```
-
-## 后端
-
-后端目录：
+## 项目结构
 
 ```text
-D:\Projects\FreshFoodSystem-v2\backend
+FreshFoodSystem-v2
+├─ backend/          Spring Boot 后端项目
+├─ database/         数据库初始化脚本与说明
+├─ docs/             项目设计、接口、认证和后端完善文档
+├─ mysql-data/       本地 MySQL 数据目录
+├─ scripts/          本地辅助脚本说明
+└─ web/              预留 Web 前端目录
 ```
 
-技术栈：
+## 本地数据库
 
-- Java 17
-- Spring Boot 4.1.0
-- Spring WebMVC
-- Spring Data JPA
-- MySQL Driver
-- Validation
-- Lombok
+当前本地开发数据库配置：
 
-启动后端：
+```text
+host: 127.0.0.1
+port: 3307
+database: fresh_delivery_v2
+username: root
+password: 空
+```
+
+数据库表和初始化数据见：
+
+- [database/init-schema.sql](D:/Projects/FreshFoodSystem-v2/database/init-schema.sql)
+- [database/README.md](D:/Projects/FreshFoodSystem-v2/database/README.md)
+
+## 后端运行
+
+进入后端目录：
 
 ```powershell
-cd backend
+cd D:\Projects\FreshFoodSystem-v2\backend
+```
+
+启动项目：
+
+```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-后端默认端口：
+健康检查：
 
-```text
-http://localhost:8080
+```http
+GET http://localhost:8080/api/health
 ```
 
 运行测试：
 
 ```powershell
-cd backend
 .\mvnw.cmd test
 ```
 
-## Git
+## 认证说明
 
-当前仓库远程地址：
+公开接口：
 
-```text
-https://github.com/lin599589754-bit/my-projects.git
+- `GET /api/health`
+- `POST /api/users/login`
+- `GET /api/categories`
+- `GET /api/products/**`
+
+其他用户相关接口默认需要：
+
+```http
+Authorization: Bearer {token}
 ```
+
+当前用户优先使用 `/current` 风格接口，例如：
+
+- `GET /api/users/current`
+- `GET /api/addresses/current`
+- `GET /api/carts/current`
+- `GET /api/orders/current`
+
+## 文档入口
+
+- [docs/01-需求分析.md](D:/Projects/FreshFoodSystem-v2/docs/01-需求分析.md)
+- [docs/02-后端接口.md](D:/Projects/FreshFoodSystem-v2/docs/02-后端接口.md)
+- [docs/03-后端完善说明.md](D:/Projects/FreshFoodSystem-v2/docs/03-后端完善说明.md)
+- [docs/04-JWT认证设计.md](D:/Projects/FreshFoodSystem-v2/docs/04-JWT认证设计.md)
+
+## 后续方向
+
+下一阶段建议先做 Web 前端联调。等用户端完整流程跑通后，再考虑：
+
+- 管理员角色和后台接口
+- Swagger/Knife4j 接口文档
+- 库存并发控制
+- 订单号生成策略优化
+- 部署说明和项目截图

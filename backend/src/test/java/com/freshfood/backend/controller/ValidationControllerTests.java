@@ -19,6 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 
 @WebMvcTest({
         AddressController.class,
@@ -81,9 +83,14 @@ class ValidationControllerTests {
     @Test
     void addToCartRejectsZeroQuantity() throws Exception {
         mockMvc.perform(post("/api/carts")
-                        .param("userId", "1")
-                        .param("productId", "1")
-                        .param("quantity", "0"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": 1,
+                                  "productId": 1,
+                                  "quantity": 0
+                                }
+                                """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("数量不能小于1"))
@@ -93,8 +100,13 @@ class ValidationControllerTests {
     @Test
     void createOrderRejectsInvalidAddressId() throws Exception {
         mockMvc.perform(post("/api/orders")
-                        .param("userId", "1")
-                        .param("addressId", "0"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": 1,
+                                  "addressId": 0
+                                }
+                                """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("地址ID不能小于1"))
@@ -104,7 +116,12 @@ class ValidationControllerTests {
     @Test
     void loginRejectsBlankOpenid() throws Exception {
         mockMvc.perform(post("/api/users/login")
-                        .param("openid", ""))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "openid": ""
+                                }
+                                """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("openid不能为空"))
@@ -126,6 +143,38 @@ class ValidationControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("商品ID不能小于1"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    void runtimeExceptionReturnsGenericServerMessage() throws Exception {
+        given(productService.getProductById(anyLong()))
+                .willThrow(new RuntimeException("数据库连接密码泄露风险"));
+
+        mockMvc.perform(get("/api/products/1"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value("服务器内部错误"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    void businessExceptionReturnsBusinessMessage() throws Exception {
+        given(cartService.addToCart(1L, 1L, 1))
+                .willThrow(new com.freshfood.backend.common.BusinessException("库存不足"));
+
+        mockMvc.perform(post("/api/carts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": 1,
+                                  "productId": 1,
+                                  "quantity": 1
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("库存不足"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 }

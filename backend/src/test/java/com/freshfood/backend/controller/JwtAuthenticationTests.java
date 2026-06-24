@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -48,9 +49,14 @@ class JwtAuthenticationTests {
                 .willReturn(buildUser());
 
         mockMvc.perform(post("/api/users/login")
-                        .param("openid", "test-openid")
-                        .param("nickName", "测试用户")
-                        .param("avatarUrl", "https://example.com/avatar.png"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "openid": "test-openid",
+                                  "nickName": "测试用户",
+                                  "avatarUrl": "https://example.com/avatar.png"
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
@@ -74,8 +80,8 @@ class JwtAuthenticationTests {
                 .willReturn(buildUser());
 
         MvcResult loginResult = mockMvc.perform(post("/api/users/login")
-                        .param("openid", "test-openid")
-                        .param("nickName", "测试用户"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -174,6 +180,94 @@ class JwtAuthenticationTests {
         verify(orderService).createOrder(1L, 1L, "尽快送达");
     }
 
+    @Test
+    void orderDetailNotFoundReturns404() throws Exception {
+        String token = loginAndGetToken();
+
+        given(orderService.getOrderDetail(999L)).willReturn(null);
+
+        mockMvc.perform(get("/api/orders/999")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("订单不存在"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    void addToCartAcceptsJsonBody() throws Exception {
+        String token = loginAndGetToken();
+
+        mockMvc.perform(post("/api/carts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": 1,
+                                  "productId": 2,
+                                  "quantity": 3
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        verify(cartService).addToCart(1L, 2L, 3);
+    }
+
+    @Test
+    void createOrderAcceptsJsonBody() throws Exception {
+        String token = loginAndGetToken();
+
+        mockMvc.perform(post("/api/orders")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": 1,
+                                  "addressId": 5,
+                                  "userRemark": "尽快送达"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        verify(orderService).createOrder(1L, 5L, "尽快送达");
+    }
+
+    @Test
+    void listUsersIsForbiddenForNormalUser() throws Exception {
+        String token = loginAndGetToken();
+
+        mockMvc.perform(get("/api/users")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.message").value("无权限访问"));
+    }
+
+    @Test
+    void getUserByOpenidIsForbiddenForNormalUser() throws Exception {
+        String token = loginAndGetToken();
+
+        mockMvc.perform(get("/api/users/openid/test-openid")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.message").value("无权限访问"));
+    }
+
+    @Test
+    void shipOrderIsForbiddenForNormalUser() throws Exception {
+        String token = loginAndGetToken();
+
+        mockMvc.perform(put("/api/orders/10/ship")
+                        .header("Authorization", "Bearer " + token)
+                        .param("trackingNo", "SF123"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.message").value("无权限访问"));
+    }
+
     private User buildUser() {
         User user = new User();
         user.setId(1L);
@@ -189,12 +283,21 @@ class JwtAuthenticationTests {
                 .willReturn(buildUser());
 
         MvcResult loginResult = mockMvc.perform(post("/api/users/login")
-                        .param("openid", "test-openid")
-                        .param("nickName", "测试用户"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson()))
                 .andExpect(status().isOk())
                 .andReturn();
 
         return extractToken(loginResult.getResponse().getContentAsString());
+    }
+
+    private String loginJson() {
+        return """
+                {
+                  "openid": "test-openid",
+                  "nickName": "测试用户"
+                }
+                """;
     }
 
     private String extractToken(String body) {

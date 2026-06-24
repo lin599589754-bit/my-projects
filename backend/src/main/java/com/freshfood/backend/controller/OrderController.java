@@ -1,6 +1,7 @@
 package com.freshfood.backend.controller;
 
 import com.freshfood.backend.common.ApiResponse;
+import com.freshfood.backend.common.NotFoundException;
 import com.freshfood.backend.dto.OrderCreateRequest;
 import com.freshfood.backend.entity.Orders;
 import com.freshfood.backend.security.CurrentUser;
@@ -10,10 +11,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,12 +69,16 @@ public class OrderController {
     @GetMapping("/{id}")
     public ApiResponse<Orders> getOrderDetail(@PathVariable @Min(value = 1, message = "订单ID不能小于1") Long id) {
         Orders order = orderService.getOrderDetail(id);
+        if (order == null) {
+            throw new NotFoundException("订单不存在");
+        }
+
         requireOrderOwner(order);
         return ApiResponse.success(order);
     }
 
     @PostMapping
-    public ApiResponse<Orders> createOrder(@Valid @ModelAttribute OrderCreateRequest orderCreateRequest) {
+    public ApiResponse<Orders> createOrder(@Valid @RequestBody OrderCreateRequest orderCreateRequest) {
         currentUser.requireSameUser(orderCreateRequest.getUserId());
         return ApiResponse.success(orderService.createOrder(
                 orderCreateRequest.getUserId(),

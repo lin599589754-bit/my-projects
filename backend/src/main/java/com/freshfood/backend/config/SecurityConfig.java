@@ -41,6 +41,11 @@ public class SecurityConfig {
                                 "/api/categories/**",
                                 "/api/products/**"
                         ).permitAll()
+                        .requestMatchers(
+                                "/api/users",
+                                "/api/users/openid/**",
+                                "/api/orders/*/ship"
+                        ).denyAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
@@ -48,7 +53,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) ->
                                 writeError(response, HttpStatus.UNAUTHORIZED, "请先登录"))
                         .accessDeniedHandler((request, response, accessDeniedException) ->
-                                writeError(response, HttpStatus.FORBIDDEN, accessDeniedException.getMessage()))
+                                writeError(response, HttpStatus.FORBIDDEN, "无权限访问"))
                 );
 
         return http.build();
